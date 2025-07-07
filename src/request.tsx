@@ -1,4 +1,4 @@
-import { createAlova, RequestElements } from "alova";
+import { Arg, createAlova, MethodType, RequestBody } from "alova";
 import adapterFetch from "alova/fetch";
 import { message } from "antd";
 
@@ -9,7 +9,16 @@ export interface ApiResponse<T> {
   code: number;
 }
 
-function request<T = any>(options: RequestElements) {
+export interface RequestOptions {
+  url: string;
+  method: MethodType;
+  headers?: Arg;
+  data?: RequestBody;
+  params?: Arg | string;
+  timeout?: number;
+}
+
+function request<T = any>(options: RequestOptions) {
   const instance = createAlova({
     baseURL: import.meta.env.VITE_BASE_API,
     // 请求超时时间，单位为毫秒，默认为0，表示永不超时
@@ -57,7 +66,7 @@ function request<T = any>(options: RequestElements) {
     },
   });
 
-  switch (options.type.toLowerCase()) {
+  switch (options.method.toLowerCase()) {
     case "delete":
       return instance.Delete(options.url, options);
     case "post":

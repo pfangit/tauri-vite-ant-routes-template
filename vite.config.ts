@@ -1,13 +1,22 @@
-import { defineConfig } from "vite";
+import { ConfigEnv, defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from "@tailwindcss/vite";
+import { viteMockServe } from "vite-plugin-mock";
 
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
-export default defineConfig(async () => ({
-  plugins: [react(), tailwindcss(),],
+export default defineConfig(async ({ command }: ConfigEnv) => ({
+  plugins: [
+    react(),
+    tailwindcss(),
+    viteMockServe({
+      mockPath: "./mock",
+      logger: true,
+      enable: command === "serve",
+    }),
+  ],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

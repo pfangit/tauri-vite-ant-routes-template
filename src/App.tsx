@@ -4,6 +4,7 @@ import { routes } from "@/config/routes.tsx";
 import Exception404 from "@/layout/exception-404.tsx";
 import { useGlobalStore } from "@/store/global.tsx";
 import { PageLoading } from "@ant-design/pro-components";
+import { fetchCurrentUser } from "@/service/user.tsx";
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -13,13 +14,14 @@ function App() {
   const loadCurrentUser = useCallback(() => {
     // todo load data from server
     setTimeout(() => {
-      setCurrentUser({
-        name: "admin",
-        userid: "1",
-        avatar:
-          "https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png",
-      });
-      setLoading(false);
+      fetchCurrentUser()
+        .then((res) => {
+          console.log(res);
+          setCurrentUser(res);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }, 1000);
   }, []);
 
