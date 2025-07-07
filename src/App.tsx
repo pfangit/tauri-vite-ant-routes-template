@@ -1,50 +1,46 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { useCallback, useEffect, useState } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { routes } from "@/config/routes.tsx";
+import Exception404 from "@/layout/exception-404.tsx";
+import { useGlobalStore } from "@/store/global.tsx";
+import { PageLoading } from "@ant-design/pro-components";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [loading, setLoading] = useState<boolean>(true);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+  const { setCurrentUser } = useGlobalStore();
+
+  const loadCurrentUser = useCallback(() => {
+    // todo load data from server
+    setTimeout(() => {
+      setCurrentUser({
+        name: "admin",
+        userid: "1",
+        avatar:
+          "https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png",
+      });
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  useEffect(() => {
+    // 获取当前登录用户信息
+    loadCurrentUser();
+  }, []);
+
+  if (loading) {
+    return <PageLoading />;
   }
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    <BrowserRouter>
+      <Routes>
+        {routes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+        <Route path="*" element={<Exception404 />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
