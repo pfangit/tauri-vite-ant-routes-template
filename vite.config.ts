@@ -5,16 +5,21 @@ import tailwindcss from "@tailwindcss/vite";
 import { viteMockServe } from "vite-plugin-mock";
 
 const host = process.env.TAURI_DEV_HOST;
+const port = parseInt(process.env.PORT);
+
+const isDev = process.env.NODE_ENV === "development";
 
 // https://vitejs.dev/config/
-export default defineConfig(async ({ command }: ConfigEnv) => ({
+export default defineConfig(async ({ mode }: ConfigEnv) => ({
   plugins: [
     react(),
     tailwindcss(),
     viteMockServe({
-      mockPath: "./mock",
+      mockPath: "mock",
+      watchFiles: true,
       logger: true,
-      enable: command === "serve",
+      enable: isDev,
+      cors: true,
     }),
   ],
 
@@ -24,9 +29,10 @@ export default defineConfig(async ({ command }: ConfigEnv) => ({
   clearScreen: false,
   // 2. tauri expects a fixed port, fail if that port is not available
   server: {
-    port: 1420,
+    port: port || 1420,
     strictPort: true,
     host: host || false,
+    open: true,
     hmr: host
       ? {
           protocol: "ws",
