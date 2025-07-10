@@ -16,10 +16,20 @@ export interface RequestOptions {
   data?: RequestBody;
   params?: Arg | string;
   timeout?: number;
+  onComplete?: () => void;
+  onError?: (message: string) => void;
 }
 
-function request<T = any>(options: RequestOptions) {
-  const instance = createAlova({
+function onError<T>(options: RequestOptions, json: ApiResponse<T>) {
+  if (options.onError !== undefined) {
+    options.onError(json.msg);
+  } else {
+    message.error(json.msg).then(() => {});
+  }
+}
+
+export default function request<T = any>(options: RequestOptions) {
+  const requestInstance = createAlova({
     baseURL: import.meta.env.VITE_BASE_API,
     // 请求超时时间，单位为毫秒，默认为0，表示永不超时
     timeout: 10000,
@@ -40,13 +50,17 @@ function request<T = any>(options: RequestOptions) {
         }
         const json: ApiResponse<T> = await response.json();
 
-        if (json.code !== 200) {
-          // 抛出错误或返回reject状态的Promise实例时，此请求将抛出错误
-          throw new Error(json.msg);
+        if (response.status !== 200) {
+          onError(options, json);
+          return Promise.reject(response.statusText);
         }
 
+        if (!json.success) {
+          onError(options, json);
+          return Promise.reject(json.msg);
+        }
         // 解析的响应数据将传给method实例的transform钩子函数，这些函数将在后续讲解
-        return json.data;
+        return json;
       },
 
       // 请求失败的拦截器
@@ -62,28 +76,29 @@ function request<T = any>(options: RequestOptions) {
       // 接收当前请求的method实例
       onComplete: async () => {
         // 处理请求完成逻辑
+        if (options.onComplete) {
+          options.onComplete();
+        }
       },
     },
   });
 
   switch (options.method.toLowerCase()) {
     case "delete":
-      return instance.Delete(options.url, options);
+      return requestInstance.Delete<T>(options.url, options);
     case "post":
-      return instance.Post(options.url, options.data, options);
+      return requestInstance.Post<T>(options.url, options.data, options);
     case "put":
-      return instance.Put(options.url, options.data, options);
+      return requestInstance.Put<T>(options.url, options.data, options);
     case "get":
-      return instance.Get(options.url, options);
+      return requestInstance.Get<T>(options.url, options);
     case "patch":
-      return instance.Patch(options.url, options.data, options);
+      return requestInstance.Patch<T>(options.url, options.data, options);
     case "head":
-      return instance.Head(options.url, options);
+      return requestInstance.Head<T>(options.url, options);
     case "options":
-      return instance.Options(options.url, options);
+      return requestInstance.Options<T>(options.url, options);
     default:
-      return instance.Request(options);
+      return requestInstance.Request<T>(options);
   }
 }
-
-export default request;

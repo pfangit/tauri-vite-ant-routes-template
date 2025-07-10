@@ -16,8 +16,9 @@ function App() {
     setTimeout(() => {
       fetchCurrentUser()
         .then((res) => {
-          console.log(res);
-          setCurrentUser(res);
+          if (res.success) {
+            setCurrentUser(res.data!);
+          }
         })
         .finally(() => {
           setLoading(false);
@@ -27,8 +28,10 @@ function App() {
 
   useEffect(() => {
     // 获取当前登录用户信息
-    loadCurrentUser();
-  }, []);
+    if (loading) {
+      loadCurrentUser();
+    }
+  }, [loading]);
 
   if (loading) {
     return <PageLoading />;

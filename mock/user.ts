@@ -9,8 +9,9 @@ export default [
       return Mock.mock({
         "code|+1": 100,
         data: {
-          "name@word": "abc",
+          name: "@word",
         },
+        msg: "@word",
         "success|1": true,
       });
     },
