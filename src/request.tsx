@@ -17,6 +17,7 @@ export interface RequestOptions {
   params?: Arg | string;
   timeout?: number;
   onComplete?: () => void;
+  skipErrorNotification?: boolean;
   onError?: (message: string) => void;
 }
 
@@ -56,8 +57,14 @@ export default function request<T = any>(options: RequestOptions) {
         }
 
         if (!json.success) {
-          onError(options, json);
-          return Promise.reject(json.msg);
+          if (!options.skipErrorNotification) {
+            onError(options, json);
+          }
+          return Promise.reject({
+            message: json.msg,
+            code: json.code,
+            type: "service",
+          });
         }
         // 解析的响应数据将传给method实例的transform钩子函数，这些函数将在后续讲解
         return json;

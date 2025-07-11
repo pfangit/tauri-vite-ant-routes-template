@@ -5,5 +5,6 @@ export const fetchCurrentUser = async () => {
   return request<ApiResponse<User>>({
     url: "/api/current",
     method: "get",
+    skipErrorNotification: true,
   });
 };
