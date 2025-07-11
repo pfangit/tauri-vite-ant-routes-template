@@ -3,6 +3,8 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import tailwindcss from "@tailwindcss/vite";
 import { viteMockServe } from "vite-plugin-mock";
+import { createHtmlPlugin } from "vite-plugin-html";
+import { settings } from "./defaultSettings";
 
 const host = process.env.TAURI_DEV_HOST;
 const port = parseInt(process.env.PORT);
@@ -20,6 +22,14 @@ export default defineConfig(async ({ mode }: ConfigEnv) => ({
       logger: true,
       enable: isDev,
       cors: true,
+    }),
+    createHtmlPlugin({
+      inject: {
+        data: {
+          // 定义了一个title 变量，可以被html中进行引用
+          title: settings.title,
+        },
+      },
     }),
   ],
 
