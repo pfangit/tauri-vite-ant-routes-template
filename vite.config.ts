@@ -1,9 +1,10 @@
-import { ConfigEnv, defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
-import tailwindcss from "@tailwindcss/vite";
-import { viteMockServe } from "vite-plugin-mock";
+import { visualizer } from "rollup-plugin-visualizer";
+import { ConfigEnv, defineConfig } from "vite";
 import { createHtmlPlugin } from "vite-plugin-html";
+import { viteMockServe } from "vite-plugin-mock";
 import { settings } from "./defaultSettings";
 
 const host = process.env.TAURI_DEV_HOST;
@@ -30,6 +31,12 @@ export default defineConfig(async ({ mode }: ConfigEnv) => ({
           title: settings.title,
         },
       },
+    }),
+    visualizer({
+      gzipSize: true,
+      brotliSize: true,
+      emitFile: false,
+      open: true, //如果存在本地服务端口，将在打包后自动展示
     }),
   ],
 
