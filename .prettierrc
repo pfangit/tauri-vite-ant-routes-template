@@ -1,1 +1,8 @@
-{}
+{
+  "plugins": ["prettier-plugin-organize-imports"],
+  "organizeImports": {
+    "sort": true,
+    "combine": true,
+    "remove": true
+  }
+}

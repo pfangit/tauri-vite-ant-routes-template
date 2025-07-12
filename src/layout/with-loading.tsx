@@ -1,8 +1,8 @@
-//  懒加载组件
-import React, { Suspense } from "react";
+import { FC, PropsWithChildren, Suspense } from "react";
 import { PageLoading } from "@ant-design/pro-components";
 
-const WithLoading = (children: React.ReactNode) => {
+//  懒加载loading转场组件
+const WithLoading: FC<PropsWithChildren> = ({ children }) => {
   return <Suspense fallback={<PageLoading />}>{children}</Suspense>;
 };
 
