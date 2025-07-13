@@ -31,5 +31,16 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "6yaJqPzoskFuUMl8pcfQKZbN13WI0CS2vt9whj5BA7ORnYm4DeTiExVrXgGHLdjbHKSDur4BOIZcETICRZJr58DJuOllEwwnVMt9Yq6YfMql5n81yLe5tN2AgEYgsn8qGTzVGrO3t97GgQI1YURfbnFs",
+      "endpoints": [
+        "http://localhost:8080/client/api/update?tauriKey=zdPX5JwK29iv0pftMTyxCR&versionName={{current_version}}&appointVersionName=&devModelKey=&devKey=&target={{target}}&arch={{arch}}",
+        "http://localhost:8080/client/api//latest/download/latest.json"
+      ],
+      "createUpdaterArtifacts": true,
+      "dangerousInsecureTransportProtocol": true
+    }
   }
 }
