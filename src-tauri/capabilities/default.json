@@ -19,26 +19,12 @@
       "identifier": "fs:scope",
       "allow": [
         {
-          "path": "$APPDATA"
-        },
-        {
-          "path": "$APPDATA/**"
-        },
-        {
           "path": "**/**"
         }
       ]
     },
     {
       "identifier": "fs:allow-exists",
-      "allow": [
-        {
-          "path": "**/**"
-        }
-      ]
-    },
-    {
-      "identifier": "fs:read-all",
       "allow": [
         {
           "path": "**/**"

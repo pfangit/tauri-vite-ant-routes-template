@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "cloud",
+  "productName": "执剑者",
   "version": "0.1.0",
   "identifier": "org.xbeeant.cloud",
   "build": {
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "cloud",
-        "width": 800,
-        "height": 600
+        "title": "执剑者",
+        "width": 1440,
+        "height": 960
       }
     ],
     "security": {
@@ -41,6 +41,8 @@
       ],
       "createUpdaterArtifacts": true,
       "dangerousInsecureTransportProtocol": true
+    },
+    "fs": {
     }
   }
 }
