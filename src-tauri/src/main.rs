@@ -1,11 +1,14 @@
 // 防止在 Windows 上发布版本运行时出现额外的控制台窗口，不要移除！！
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod util;
+
 // 使用 tauri 必要模块来构建应用程序
 use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager,
 };
+use crate::util::list_files_and_directories;
 
 // 主函数，启动 Tauri 应用程序
 fn main() {
@@ -60,7 +63,9 @@ fn main() {
         // 初始化剪贴板插件
         .plugin(tauri_plugin_clipboard::init())
         // 注册 JS 通信处理函数
-        .invoke_handler(tauri::generate_handler![])
+        .invoke_handler(tauri::generate_handler![
+            list_files_and_directories
+        ])
         // 初始化文件系统插件
         .plugin(tauri_plugin_fs::init())
         // 初始化 store 插件

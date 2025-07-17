@@ -1,24 +1,25 @@
 import { Input, message, Tree } from "antd";
 import React, { useEffect, useState } from "react";
 
-import { sep } from "@tauri-apps/api/path";
-import {
-  BaseDirectory,
-  DirEntry,
-  readDir,
-  rename,
-} from "@tauri-apps/plugin-fs";
+import { invoke } from "@tauri-apps/api/core";
+import { documentDir } from "@tauri-apps/api/path";
+import { rename } from "@tauri-apps/plugin-fs";
 
-interface DataNode extends DirEntry {
-  children?: DataNode[];
+type FileDir = {
+  name: string;
   path: string;
+  is_directory: boolean;
+  children?: FileDir[];
+};
+
+type DataNode = {
   key: string;
   isLeaf: boolean;
   title: string;
-}
+  children?: DataNode[];
+} & Omit<FileDir, "children">;
 
-console.log(BaseDirectory);
-const baseDir = "/";
+const baseDir = await documentDir();
 
 const initTreeData: DataNode[] = [];
 
@@ -45,58 +46,60 @@ const updateTreeData = (
   });
 
 const Index: React.FC = () => {
-  const [treeData, setTreeData] = useState(initTreeData);
+  const [treeData, setTreeData] = useState<DataNode[]>(initTreeData);
 
-  const initialTreeValue = () => {
-    readDir(baseDir)
-      .then((entries) => {
-        setTreeData(
-          entries.map((entry) => {
-            const path = baseDir + sep() + entry.name;
-            return {
-              ...entry,
-              isLeaf: !entry.isDirectory,
-              title: entry.name,
-              key: path,
-              path: path,
-            };
-          }),
-        );
-      })
-      .catch((e) => {
-        console.error(e);
-      });
+  const directoriesAndFiles = async () => {
+    const result = await invoke("list_files_and_directories", {
+      dirPath: baseDir,
+    });
+    console.log("result", result);
+    return result as FileDir;
+  };
+
+  const convertData = (item?: FileDir[]) => {
+    if (item === null || item === undefined || item.length === 0) {
+      return undefined;
+    }
+    return item.map((item): DataNode => {
+      return {
+        ...item,
+        key: item.path,
+        isLeaf: !item.is_directory,
+        title: item.name,
+        children: convertData(item.children),
+      };
+    });
   };
 
   useEffect(() => {
-    initialTreeValue();
+    directoriesAndFiles().then((result) => {
+      return setTreeData(convertData([result]) || []);
+    });
+    // initialTreeValue();
   }, []);
 
   const onLoadData = ({ key, children, path }: DataNode) =>
-    new Promise<void>((resolve) => {
+    new Promise<void>(async (resolve) => {
       if (children) {
         resolve();
         return;
       }
-      readDir(path)
-        .then((entries) => {
-          const subs = entries.map((entry) => {
-            const subpath = path + sep() + entry.name;
-            return {
-              ...entry,
-              isLeaf: !entry.isDirectory,
-              title: entry.name,
-              key: subpath,
-              path: subpath,
-            };
-          });
-          setTreeData((origin) => updateTreeData(origin, key, subs));
-          resolve();
-        })
-        .catch((e) => {
-          resolve();
-          message.error(e).then(() => {});
-        });
+      const entries = (await invoke("list_files_and_directories", {
+        dirPath: path,
+      }).catch((e) => {
+        resolve();
+        message.error(e).then(() => {});
+      })) as unknown as FileDir[];
+      const subs = entries.map((entry) => {
+        return {
+          ...entry,
+          isLeaf: !entry.is_directory,
+          title: entry.name,
+          key: entry.path,
+        } as DataNode;
+      });
+      setTreeData((origin) => updateTreeData(origin, key, subs));
+      resolve();
     });
 
   const [editingNodeKey, setEditingNodeKey] = useState<string | null>(null);
