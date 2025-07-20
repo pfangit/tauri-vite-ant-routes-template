@@ -1,6 +1,7 @@
 import { Input, message, Tree } from "antd";
 import React, { useEffect, useState } from "react";
 
+import { fetchFiles } from "@/service/files.tsx";
 import { invoke } from "@tauri-apps/api/core";
 import { documentDir } from "@tauri-apps/api/path";
 import { rename } from "@tauri-apps/plugin-fs";
@@ -48,7 +49,15 @@ const updateTreeData = (
 const Index: React.FC = () => {
   const [treeData, setTreeData] = useState<DataNode[]>(initTreeData);
 
-  const directoriesAndFiles = async () => {
+  const remoteFiles = () => {
+    fetchFiles({
+      pid: "0",
+    }).then((res) => {
+      console.log(res);
+    });
+  };
+
+  const localDirectoriesAndFiles = async () => {
     const result = await invoke("list_files_and_directories", {
       dirPath: baseDir,
     });
@@ -72,9 +81,11 @@ const Index: React.FC = () => {
   };
 
   useEffect(() => {
-    directoriesAndFiles().then((result) => {
+    localDirectoriesAndFiles().then((result) => {
       return setTreeData(convertData([result]) || []);
     });
+
+    remoteFiles();
     // initialTreeValue();
   }, []);
 

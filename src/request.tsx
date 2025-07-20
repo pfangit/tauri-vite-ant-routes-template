@@ -2,8 +2,24 @@ import { Arg, createAlova, MethodType, RequestBody } from "alova";
 import adapterFetch from "alova/fetch";
 import { message } from "antd";
 
+export interface Pagination {
+  current: number;
+  pageSize: number;
+  total: number;
+}
+
 export interface ApiResponse<T> {
   data?: T;
+  success: boolean;
+  msg: string;
+  code: number;
+}
+
+export interface ApiPageResponse<T> {
+  data?: {
+    list: T[];
+    pagination: Pagination;
+  };
   success: boolean;
   msg: string;
   code: number;
