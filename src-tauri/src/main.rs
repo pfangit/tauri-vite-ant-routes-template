@@ -3,13 +3,17 @@
 
 mod util;
 
+use notify::{Event, EventKind, RecursiveMode, Watcher};
 use std::path::PathBuf;
 use std::sync::{mpsc::channel, Arc, Mutex};
 use std::time::Duration;
-use notify::{Event, RecursiveMode, Watcher};
 // 使用 tauri 必要模块来构建应用程序
-use tauri::{tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}, AppHandle, Emitter, Manager, Wry};
 use crate::util::list_files_and_directories;
+use tauri::{
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    AppHandle, Emitter, Manager, Wry,
+};
+use log::log;
 
 // 这是一个模拟的云客户端的占位符。
 // 在真实应用中，你将在这里初始化你选择的云服务商的 SDK。
@@ -26,7 +30,11 @@ impl CloudClient {
     // 模拟将文件上传到云端。
     // 这是一个异步函数。
     async fn upload_file(&self, path: &PathBuf) -> Result<(), String> {
-        let file_name = path.file_name().unwrap_or_default().to_str().unwrap_or_default();
+        let file_name = path
+            .file_name()
+            .unwrap_or_default()
+            .to_str()
+            .unwrap_or_default();
         println!("模拟操作：正在上传 '{}' 到云端...", file_name);
 
         // 在这里插入你真实的上传逻辑 (例如，使用 AWS S3 SDK)。
@@ -62,12 +70,16 @@ fn start_file_watcher(app_handle: AppHandle<Wry>, path_to_watch: Arc<PathBuf>) {
                 Err(e) => println!("监视错误: {:?}", e),
             }
         })
-            .expect("无法创建文件监视器");
+        .expect("无法创建文件监视器");
 
         // 添加要监视的路径，并设置为递归模式
-        watcher
-            .watch(&*path_to_watch, RecursiveMode::Recursive)
-            .expect("无法开始监视目录");
+        match watcher.watch(&*path_to_watch, RecursiveMode::Recursive) {
+            Ok(_) => println!("开始监控目录: {:?}", path_to_watch),
+            Err(e) => {
+                eprintln!("监控目录失败: {:?} - {:?}", path_to_watch, e);
+                return;
+            }
+        }
 
         println!("已开始监视目录: {:?}", path_to_watch);
 
@@ -76,20 +88,35 @@ fn start_file_watcher(app_handle: AppHandle<Wry>, path_to_watch: Arc<PathBuf>) {
 
         // 从通道接收文件变更事件
         for event in rx {
+            let kind_str = match event.kind {
+                EventKind::Create(_) => "create",
+                EventKind::Remove(_) => "del",
+                EventKind::Modify(_) => "rename",
+                EventKind::Other => "other",
+                // Ignore other event types
+                _ => continue,
+            };
+            println!("---- 文件变更: {} - {}", kind_str, event.paths.len());
+            // rename 时 paths是数组，0 旧名称 1 新名称
             for path in event.paths {
+                let client = cloud_client.clone();
+                let file_path = path.to_string_lossy().into_owned();
+                let file_name = path.file_name().unwrap().to_str().unwrap().to_string();
+                println!("---- 文件变更: {} - {} {}", kind_str, file_path, file_name);
                 // 确保变更的是一个文件
-                if path.is_file() {
-                    let client = cloud_client.clone();
-                    let file_name = path.file_name().unwrap().to_str().unwrap().to_string();
-
+                if path.is_file() || path.is_dir() {
                     // 向前端发送事件，告知同步正在进行
-                    app_handle.emit("sync-status", format!("正在同步: {}", file_name)).unwrap();
+                    app_handle
+                        .emit("sync-status", format!("正在同步: {}", file_name))
+                        .unwrap();
 
                     // 在 Tokio 运行时中执行异步上传
                     rt.block_on(async {
                         if let Err(e) = client.upload_file(&path).await {
                             eprintln!("文件上传失败 {:?}: {}", path, e);
-                            app_handle.emit("sync-status", format!("同步失败: {}", file_name)).unwrap();
+                            app_handle
+                                .emit("sync-status", format!("同步失败: {}", file_name))
+                                .unwrap();
                         } else {
                             // 成功后，通知前端恢复空闲状态
                             app_handle.emit("sync-status", "空闲").unwrap();
@@ -172,9 +199,7 @@ fn main() {
         // 初始化剪贴板插件
         .plugin(tauri_plugin_clipboard::init())
         // 注册 JS 通信处理函数
-        .invoke_handler(tauri::generate_handler![
-            list_files_and_directories
-        ])
+        .invoke_handler(tauri::generate_handler![list_files_and_directories])
         // 初始化文件系统插件
         .plugin(tauri_plugin_fs::init())
         // 初始化 store 插件

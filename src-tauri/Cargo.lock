@@ -643,6 +643,7 @@ dependencies = [
 name = "cloud"
 version = "0.1.0"
 dependencies = [
+ "log",
  "notify",
  "serde",
  "serde_json",
