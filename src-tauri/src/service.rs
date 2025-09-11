@@ -17,7 +17,7 @@ impl CloudClient {
     // 这是一个异步函数。
 
     // 上传文件到云端的函数
-    pub(crate) async  fn upload_file_to_cloud(&self, path: &PathBuf) -> Result<(), String> {
+    pub(crate) async fn upload_file_to_cloud(&self, path: &PathBuf) -> Result<(), String> {
         let file_name = path
             .file_name()
             .unwrap_or_default()
@@ -55,5 +55,4 @@ impl CloudClient {
         //     }
         // }
     }
-
 }

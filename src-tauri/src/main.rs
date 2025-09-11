@@ -4,6 +4,7 @@
 mod files;
 mod service;
 
+use crate::files::list_directories;
 // 使用 tauri 必要模块来构建应用程序
 use crate::files::list_files_and_directories;
 use crate::files::start_file_watcher;
@@ -18,6 +19,7 @@ use tauri::{
 fn main() {
     // 初始化默认的 Tauri 构建器
     tauri::Builder::default()
+        .plugin(tauri_plugin_sql::Builder::new().build())
         // 初始化进程插件
         .plugin(tauri_plugin_process::init())
         // 初始化更新插件
@@ -85,7 +87,10 @@ fn main() {
         // 初始化剪贴板插件
         .plugin(tauri_plugin_clipboard::init())
         // 注册 JS 通信处理函数
-        .invoke_handler(tauri::generate_handler![list_files_and_directories])
+        .invoke_handler(tauri::generate_handler![
+            list_files_and_directories,
+            list_directories,
+        ])
         // 初始化文件系统插件
         .plugin(tauri_plugin_fs::init())
         // 初始化 store 插件

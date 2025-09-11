@@ -58,7 +58,7 @@ const Index: React.FC = () => {
   };
 
   const localDirectoriesAndFiles = async () => {
-    const result = await invoke("list_files_and_directories", {
+    const result = await invoke("list_directories", {
       dirPath: baseDir,
     });
     console.log("result", result);
@@ -95,7 +95,7 @@ const Index: React.FC = () => {
         resolve();
         return;
       }
-      const entries = (await invoke("list_files_and_directories", {
+      const entries = (await invoke("list_directories", {
         dirPath: path,
       }).catch((e) => {
         resolve();

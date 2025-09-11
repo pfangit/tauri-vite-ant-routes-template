@@ -62,6 +62,9 @@
           "path": "**/**"
         }
       ]
-    }
+    },
+    "dialog:default",
+    "sql:default",
+    "store:default"
   ]
 }
